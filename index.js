@@ -1,0 +1,63 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import sequelize from "./config/database.js";
+
+dotenv.config();
+
+const app = express();
+
+// CORS Configuration
+const allowedOrigins = [process.env.FRONTEND_URL, process.env.TV_URL].filter(
+  Boolean
+);
+
+// LAN regex dari .env
+const lanRegex = new RegExp(process.env.LAN_REGEX);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      const isAllowed =
+        lanRegex.test(normalizedOrigin) ||
+        allowedOrigins.some(
+          (allowed) => allowed.replace(/\/$/, "") === normalizedOrigin
+        );
+
+      if (isAllowed) return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+app.use(express.json());
+
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    await sequelize.authenticate();
+
+    console.log("Database connected successfully");
+
+    await sequelize.sync();
+
+    console.log("Database synchronized");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Database connection failed:");
+    console.error(error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
