@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import sequelize from "./config/database.js";
+// import userRoutes from "./routes/userRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
 
 dotenv.config();
 
@@ -37,6 +39,10 @@ app.use(
 );
 
 app.use(express.json());
+// app.use("/api/auth", authRoutes);
+// app.use("/api/users", userRoutes);
+app.use("/api/students", studentRoutes);
+app.use("/uploads", express.static("public/uploads"));
 
 const PORT = process.env.PORT || 5000;
 
